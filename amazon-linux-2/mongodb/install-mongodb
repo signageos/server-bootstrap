@@ -1,0 +1,19 @@
+#!/bin/bash
+
+set -e
+
+mkfs -t xfs /dev/xvdb
+mkdir /data
+echo "/dev/xvdb    /data    xfs    defaults,nofail    0    2" >> /etc/fstab
+mount -a
+
+cp mongodb-org-4.0.repo /etc/yum.repos.d/mongodb-org-4.0.repo
+yum install -y mongodb-org
+
+mkdir -p /data/mongo
+chown mongod:mongod /data -R
+
+rm -f /etc/mongod.conf
+cp mongod.conf /etc/mongod.conf
+
+service mongod start
