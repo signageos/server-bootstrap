@@ -1,0 +1,12 @@
+#!/bin/bash
+
+set -e
+
+cp rabbitmq_erlang.repo /etc/yum.repos.d/rabbitmq_erlang.repo
+yum install -y erlang
+
+curl -s https://packagecloud.io/install/repositories/rabbitmq/rabbitmq-server/script.rpm.sh | bash
+yum install -y rabbitmq-server
+
+chkconfig rabbitmq-server on
+service rabbitmq-server start
