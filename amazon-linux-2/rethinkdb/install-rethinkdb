@@ -1,0 +1,19 @@
+#!/bin/bash
+
+set -e
+
+mkfs -t xfs /dev/xvdb
+mkdir /data
+echo "/dev/xvdb    /data    xfs    defaults,nofail    0    2" >> /etc/fstab
+mount -a
+
+yum install https://download.rethinkdb.com/centos/7/x86_64/rethinkdb-2.3.6.x86_64.rpm
+cp /etc/rethinkdb/default.conf.sample /etc/rethinkdb/instances.d/instance1.conf
+
+mkdir -p /data/rethinkdb/instance1
+chown rethinkdb:rethinkdb /data -R
+echo "directory=/data/rethinkdb/instance1" >> /etc/rethinkdb/instances.d/instance1.conf
+echo "bind=all" >> /etc/rethinkdb/instances.d/instance1.conf
+
+service rethinkdb start
+
