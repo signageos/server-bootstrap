@@ -1,0 +1,8 @@
+#!/bin/bash
+
+socat TCP-LISTEN:5432,fork TCP:10.0.0.4:5432 &
+socat TCP-LISTEN:27017,fork TCP:10.0.1.4:27017 &
+socat TCP-LISTEN:28015,fork TCP:10.0.2.4:28015 &
+socat TCP-LISTEN:29015,fork TCP:10.0.2.4:29015 &
+
+wait $(jobs -p)
