@@ -7,5 +7,6 @@ socat TCP-LISTEN:29015,fork TCP:10.0.2.4:29015 &
 socat TCP-LISTEN:4369,fork TCP:10.0.3.4:4369 &
 socat TCP-LISTEN:5672,fork TCP:10.0.3.4:5672 &
 socat TCP-LISTEN:15672,fork TCP:10.0.3.4:15672 &
+socat TCP-LISTEN:6379,fork TCP:10.0.7.4:6379 &
 
 wait $(jobs -p)
