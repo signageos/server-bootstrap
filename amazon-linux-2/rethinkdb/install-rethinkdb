@@ -14,6 +14,7 @@ mkdir -p /data/rethinkdb/instance1
 chown rethinkdb:rethinkdb /data -R
 echo "directory=/data/rethinkdb/instance1" >> /etc/rethinkdb/instances.d/instance1.conf
 echo "bind=all" >> /etc/rethinkdb/instances.d/instance1.conf
+echo "join=91.241.9.15:29215" >> /etc/rethinkdb/instances.d/instance1.conf
 
 service rethinkdb start
 
