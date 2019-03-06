@@ -1,4 +1,0 @@
-[Unit]
-Description=DBs Port Forwarding
-[Service]
-ExecStart=/home/ec2-user/dbs-port-forwarding
