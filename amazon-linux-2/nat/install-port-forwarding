@@ -2,6 +2,49 @@
 
 set -e
 
-yum install -y socat
-ln -s /home/ec2-user/dbs-port-forwarding.service /etc/systemd/system/dbs-port-forwarding.service
-systemctl start dbs-port-forwarding
+yum update -y
+yum install -y iptables iptables-services
+systemctl enable iptables
+systemctl start iptables
+
+# first make sure iptables are completely empty
+iptables --flush
+iptables --table nat --flush
+iptables --delete-chain
+iptables --table nat --delete-chain
+
+# enable packet forwarding by kernel
+echo 'net.ipv4.ip_forward = 1' >> /usr/lib/sysctl.d/50-default.conf
+echo 1 > /proc/sys/net/ipv4/ip_forward
+
+# configure NAT
+iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE # masquerade outgoing traffic from private network
+iptables -A FORWARD -i eth1 -j ACCEPT # enable packets to flow back to private network
+
+# configure port forwarding
+iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 5432 -j DNAT --to 10.0.0.4:5432
+iptables -A FORWARD -p tcp -d 10.0.0.4 --dport 5432 -j ACCEPT
+
+iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 27017 -j DNAT --to 10.0.1.4:27017
+iptables -A FORWARD -p tcp -d 10.0.1.4 --dport 27017 -j ACCEPT
+
+iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 28015 -j DNAT --to 10.0.2.4:28015
+iptables -A FORWARD -p tcp -d 10.0.2.4 --dport 28015 -j ACCEPT
+
+iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 29015 -j DNAT --to 10.0.2.4:29015
+iptables -A FORWARD -p tcp -d 10.0.2.4 --dport 29015 -j ACCEPT
+
+iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 4369 -j DNAT --to 10.0.3.4:4369
+iptables -A FORWARD -p tcp -d 10.0.3.4 --dport 4369 -j ACCEPT
+
+iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 5672 -j DNAT --to 10.0.3.4:5672
+iptables -A FORWARD -p tcp -d 10.0.3.4 --dport 5672 -j ACCEPT
+
+iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 15672 -j DNAT --to 10.0.3.4:15672
+iptables -A FORWARD -p tcp -d 10.0.3.4 --dport 15672 -j ACCEPT
+
+iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 6379 -j DNAT --to 10.0.7.4:6379
+iptables -A FORWARD -p tcp -d 10.0.7.4 --dport 6379 -j ACCEPT
+
+# save iptables settings
+service iptables save
