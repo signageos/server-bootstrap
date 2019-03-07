@@ -43,6 +43,9 @@ iptables -A FORWARD -p tcp -d 10.0.3.4 --dport 5672 -j ACCEPT
 iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 15672 -j DNAT --to 10.0.3.4:15672
 iptables -A FORWARD -p tcp -d 10.0.3.4 --dport 15672 -j ACCEPT
 
+iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 25672 -j DNAT --to 10.0.3.4:25672
+iptables -A FORWARD -p tcp -d 10.0.3.4 --dport 25672 -j ACCEPT
+
 iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 6379 -j DNAT --to 10.0.7.4:6379
 iptables -A FORWARD -p tcp -d 10.0.7.4 --dport 6379 -j ACCEPT
 
