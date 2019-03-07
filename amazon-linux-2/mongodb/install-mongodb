@@ -16,4 +16,8 @@ chown mongod:mongod /data -R
 rm -f /etc/mongod.conf
 cp mongod.conf /etc/mongod.conf
 
+echo "---ADD KEYFILE---" > /data/mongo/keyfile
+chmod 600 /data/mongo/keyfile
+chown mongod:mongod /data/mongo/keyfile
+
 service mongod start

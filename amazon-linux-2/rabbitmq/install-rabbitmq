@@ -10,3 +10,15 @@ yum install -y rabbitmq-server
 
 chkconfig rabbitmq-server on
 service rabbitmq-server start
+
+echo "91.241.9.15    hholix1_rabbitmq_1" >> /etc/hosts
+echo "$(hostname -I)    $(hostname -s)" >> /etc/hosts
+
+rabbitmq-plugins enable rabbitmq_management
+
+rabbitmqctl stop_app
+
+echo -n "---ADD COOKIE---" > /var/lib/rabbitmq/.erlang.cookie # TODO not checked
+
+env ERL_EPMD_PORT=5069 rabbitmqctl join_cluster rabbit@hholix1_rabbitmq_1
+rabbitmqctl start_app

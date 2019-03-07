@@ -15,6 +15,10 @@ chown rethinkdb:rethinkdb /data -R
 echo "directory=/data/rethinkdb/instance1" >> /etc/rethinkdb/instances.d/instance1.conf
 echo "bind=all" >> /etc/rethinkdb/instances.d/instance1.conf
 echo "join=91.241.9.15:29215" >> /etc/rethinkdb/instances.d/instance1.conf
+echo "join=91.241.9.15:29715" >> /etc/rethinkdb/instances.d/instance1.conf
+echo "join=91.241.9.15:29815" >> /etc/rethinkdb/instances.d/instance1.conf
+echo "join=91.241.9.15:29915" >> /etc/rethinkdb/instances.d/instance1.conf
+echo "join=91.241.9.15:30015" >> /etc/rethinkdb/instances.d/instance1.conf
 
 service rethinkdb start
 
