@@ -2,9 +2,9 @@
 
 set -e
 
-mkfs -t xfs /dev/xvdb
+mkfs -t xfs /dev/sdb
 mkdir /data
-echo "/dev/xvdb    /data    xfs    defaults,nofail    0    2" >> /etc/fstab
+echo "/dev/sdb    /data    xfs    defaults,nofail    0    2" >> /etc/fstab
 mount -a
 
 cp mongodb-org-4.0.repo /etc/yum.repos.d/mongodb-org-4.0.repo

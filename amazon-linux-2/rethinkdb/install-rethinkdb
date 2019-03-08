@@ -2,9 +2,9 @@
 
 set -e
 
-mkfs -t xfs /dev/xvdb
+mkfs -t xfs /dev/sdb
 mkdir /data
-echo "/dev/xvdb    /data    xfs    defaults,nofail    0    2" >> /etc/fstab
+echo "/dev/sdb    /data    xfs    defaults,nofail    0    2" >> /etc/fstab
 mount -a
 
 yum install -y https://download.rethinkdb.com/centos/7/x86_64/rethinkdb-2.3.6.x86_64.rpm
