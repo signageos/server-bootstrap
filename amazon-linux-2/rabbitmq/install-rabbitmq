@@ -20,5 +20,5 @@ rabbitmqctl stop_app
 
 echo -n "---ADD COOKIE---" > /var/lib/rabbitmq/.erlang.cookie # TODO not checked
 
-env ERL_EPMD_PORT=5069 rabbitmqctl join_cluster rabbit@hholix1_rabbitmq_1
+rabbitmqctl join_cluster rabbit@hholix1_rabbitmq_1
 rabbitmqctl start_app
