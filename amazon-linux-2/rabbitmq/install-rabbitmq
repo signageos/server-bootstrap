@@ -16,9 +16,10 @@ echo "$(hostname -I)    $(hostname -s)" >> /etc/hosts
 
 rabbitmq-plugins enable rabbitmq_management
 
-rabbitmqctl stop_app
+echo -n "---ADD COOKIE---" > /var/lib/rabbitmq/.erlang.cookie
+reboot
 
-echo -n "---ADD COOKIE---" > /var/lib/rabbitmq/.erlang.cookie # TODO not checked
+rabbitmqctl stop_app
 
 rabbitmqctl join_cluster rabbit@hholix1_rabbitmq_1
 rabbitmqctl start_app
