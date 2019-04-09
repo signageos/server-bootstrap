@@ -19,6 +19,10 @@ echo "join=91.241.9.15:29715" >> /etc/rethinkdb/instances.d/instance1.conf
 echo "join=91.241.9.15:29815" >> /etc/rethinkdb/instances.d/instance1.conf
 echo "join=91.241.9.15:29915" >> /etc/rethinkdb/instances.d/instance1.conf
 echo "join=91.241.9.15:30015" >> /etc/rethinkdb/instances.d/instance1.conf
+echo "join=10.0.2.4:28015" >> /etc/rethinkdb/instances.d/instance1.conf
+echo "join=10.0.2.5:28015" >> /etc/rethinkdb/instances.d/instance1.conf
+echo "join=10.0.2.6:28015" >> /etc/rethinkdb/instances.d/instance1.conf
+echo "join=10.0.2.7:28015" >> /etc/rethinkdb/instances.d/instance1.conf
 
 service rethinkdb start
 
