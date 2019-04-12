@@ -21,19 +21,22 @@ echo 1 > /proc/sys/net/ipv4/ip_forward
 iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE # masquerade outgoing traffic from private network
 iptables -A FORWARD -i eth1 -j ACCEPT # enable packets to flow back to private network
 
-# configure port forwarding
+# configure port forwarding for postgres
 iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 5432 -j DNAT --to 10.0.0.4:5432
 iptables -A FORWARD -p tcp -d 10.0.0.4 --dport 5432 -j ACCEPT
 
+# configure port forwarding for mongodb main
 iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 27017 -j DNAT --to 10.0.1.4:27017
 iptables -A FORWARD -p tcp -d 10.0.1.4 --dport 27017 -j ACCEPT
 
+# configure port forwarding for rethinkdb
 iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 28015 -j DNAT --to 10.0.2.4:28015
 iptables -A FORWARD -p tcp -d 10.0.2.4 --dport 28015 -j ACCEPT
 
 iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 29015 -j DNAT --to 10.0.2.4:29015
 iptables -A FORWARD -p tcp -d 10.0.2.4 --dport 29015 -j ACCEPT
 
+# configure port forwarding for rabbitmq main
 iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 4369 -j DNAT --to 10.0.3.4:4369
 iptables -A FORWARD -p tcp -d 10.0.3.4 --dport 4369 -j ACCEPT
 
@@ -46,8 +49,57 @@ iptables -A FORWARD -p tcp -d 10.0.3.4 --dport 15672 -j ACCEPT
 iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 25672 -j DNAT --to 10.0.3.4:25672
 iptables -A FORWARD -p tcp -d 10.0.3.4 --dport 25672 -j ACCEPT
 
+# configure port forwarding for rabbitmq logs
+iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 4379 -j DNAT --to 10.0.6.4:4369
+iptables -A FORWARD -p tcp -d 10.0.6.4 --dport 4369 -j ACCEPT
+
+iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 5682 -j DNAT --to 10.0.6.4:5672
+iptables -A FORWARD -p tcp -d 10.0.6.4 --dport 5672 -j ACCEPT
+
+iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 15682 -j DNAT --to 10.0.6.4:15672
+iptables -A FORWARD -p tcp -d 10.0.6.4 --dport 15672 -j ACCEPT
+
+iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 25682 -j DNAT --to 10.0.6.4:25672
+iptables -A FORWARD -p tcp -d 10.0.6.4 --dport 25672 -j ACCEPT
+
+# configure port forwarding for rabbitmq monitoring
+iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 4389 -j DNAT --to 10.0.4.4:4369
+iptables -A FORWARD -p tcp -d 10.0.4.4 --dport 4369 -j ACCEPT
+
+iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 5692 -j DNAT --to 10.0.4.4:5672
+iptables -A FORWARD -p tcp -d 10.0.4.4 --dport 5672 -j ACCEPT
+
+iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 15692 -j DNAT --to 10.0.4.4:15672
+iptables -A FORWARD -p tcp -d 10.0.4.4 --dport 15672 -j ACCEPT
+
+iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 25692 -j DNAT --to 10.0.4.4:25672
+iptables -A FORWARD -p tcp -d 10.0.4.4 --dport 25672 -j ACCEPT
+
+
+# configure port forwarding for rabbitmq devices
+iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 4399 -j DNAT --to 10.0.5.4:4369
+iptables -A FORWARD -p tcp -d 10.0.5.4 --dport 4369 -j ACCEPT
+
+iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 5702 -j DNAT --to 10.0.5.4:5672
+iptables -A FORWARD -p tcp -d 10.0.5.4 --dport 5672 -j ACCEPT
+
+iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 15702 -j DNAT --to 10.0.5.4:15672
+iptables -A FORWARD -p tcp -d 10.0.5.4 --dport 15672 -j ACCEPT
+
+iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 25702 -j DNAT --to 10.0.5.4:25672
+iptables -A FORWARD -p tcp -d 10.0.5.4 --dport 25672 -j ACCEPT
+
+# configure port forwarding for redis
 iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 6379 -j DNAT --to 10.0.7.4:6379
 iptables -A FORWARD -p tcp -d 10.0.7.4 --dport 6379 -j ACCEPT
+
+# configure virtual IP address port forwarding for MongoDB replica set with Algocloud
+iptables -A PREROUTING -t nat -i eth1 -p tcp  --destination 10.210.54.23 --dport 27017 -j DNAT --to 91.241.9.15:27617
+iptables -A PREROUTING -t nat -i eth1 -p tcp  --destination 10.210.54.24 --dport 27017 -j DNAT --to 91.241.9.15:27717
+iptables -A PREROUTING -t nat -i eth1 -p tcp  --destination 10.210.54.25 --dport 27017 -j DNAT --to 91.241.9.15:27817
+iptables -A FORWARD -p tcp -d 91.241.9.15 --dport 27617 -j ACCEPT
+iptables -A FORWARD -p tcp -d 91.241.9.15 --dport 27717 -j ACCEPT
+iptables -A FORWARD -p tcp -d 91.241.9.15 --dport 27817 -j ACCEPT
 
 # save iptables settings
 service iptables save
