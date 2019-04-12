@@ -7,20 +7,30 @@ mkdir /data
 echo "/dev/sdb    /data    xfs    defaults,nofail    0    2" >> /etc/fstab
 mount -a
 
-yum install -y https://download.postgresql.org/pub/repos/yum/10/redhat/rhel-7-x86_64/pgdg-redhat10-10-2.noarch.rpm
-sed -i "s/rhel-\$releasever-\$basearch/rhel-latest-x86_64/g" "/etc/yum.repos.d/pgdg-10-redhat.repo"
-yum install -y postgresql10 postgresql10-server postgresql10-contrib
-repoquery -l postgresql10
+yum update -y
+yum install -y openssl
+yum install -y https://download.postgresql.org/pub/repos/yum/9.4/redhat/rhel-7-x86_64/pgdg-redhat94-9.4-3.noarch.rpm
+sed -i "s/rhel-\$releasever-\$basearch/rhel-latest-x86_64/g" "/etc/yum.repos.d/pgdg-94-redhat.repo"
+yum install -y postgresql94 postgresql94-server postgresql94-contrib
+repoquery -l postgresql94
 
 mkdir -p /data/pgsql
-rm -rf /var/lib/pgsql/10/data
-ln -s /data/pgsql /var/lib/pgsql/10/data
+rm -rf /var/lib/pgsql/9.4/data
+ln -s /data/pgsql /var/lib/pgsql/9.4/data
 chown postgres:postgres /data -R
+chmod 0700 /data/pgsql
 
-/usr/pgsql-10/bin/postgresql-10-setup initdb
-echo "listen_addresses '*'" >> /var/lib/pgsql/10/data/postgresql.conf
+openssl req -newkey rsa:2048 -nodes -keyout private.key -x509 -days 10950 -out certificate.pem -subj "/O=signageOS/CN=postgre1.aws.signageos.io"
+chmod 644 certificate.pem
+chown postgres:postgres certificate.pem
+chmod 600 private.key
+chown postgres:postgres private.key
+mv certificate.pem /etc/pki/tls/certs/postgres.pem
+mv private.key /etc/pki/tls/private/postgres.key
 
-systemctl enable postgresql-10.service
-systemctl start postgresql-10.service
+/usr/pgsql-9.4/bin/postgresql94-setup initdb
+
+systemctl enable postgresql-9.4.service
+systemctl start postgresql-9.4.service
 sudo -u postgres psql -U postgres -c 'SHOW config_file'
 
