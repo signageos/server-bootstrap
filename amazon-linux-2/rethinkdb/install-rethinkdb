@@ -10,6 +10,10 @@ mount -a
 yum install -y https://download.rethinkdb.com/centos/7/x86_64/rethinkdb-2.3.6.x86_64.rpm
 cp /etc/rethinkdb/default.conf.sample /etc/rethinkdb/instances.d/instance1.conf
 
+rpm -ivh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+yum install -y monit
+cp monit-rethinkdb.conf /etc/monit.d/rethink
+
 mkdir -p /data/rethinkdb/instance1
 chown rethinkdb:rethinkdb /data -R
 echo "directory=/data/rethinkdb/instance1" >> /etc/rethinkdb/instances.d/instance1.conf
@@ -26,3 +30,6 @@ echo "join=10.0.2.7:28015" >> /etc/rethinkdb/instances.d/instance1.conf
 
 service rethinkdb start
 
+monit
+monit reload
+systemctl enable monit.service
