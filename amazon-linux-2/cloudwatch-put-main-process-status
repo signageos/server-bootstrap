@@ -1,0 +1,22 @@
+#!/bin/bash
+
+set -e
+
+INSTANCE_ID=`ec2-metadata --instance-id | cut -d " " -f 2`
+REGION=`ec2-metadata -z | cut -d " " -f 2 | sed 's/[a-z]$//'`
+PROCESS_NAME=$1
+
+if ps -edaf | grep $1 | grep -vq grep
+then
+    IS_PROCESS_RUNNING=1
+else
+    IS_PROCESS_RUNNING=0
+fi
+
+aws cloudwatch put-metric-data \
+    --region $REGION \
+    --namespace "Linux System" \
+    --metric-name "MainProcessRunning" \
+    --unit "Count" \
+    --value $IS_PROCESS_RUNNING \
+    --dimensions InstanceId=$INSTANCE_ID
