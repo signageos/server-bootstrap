@@ -1,0 +1,14 @@
+mongo-main1
+mongo-main2
+mongo-main3
+mongo-platform1
+mongo-platform2
+mongo-platform3
+rethink1
+rethink2
+mongo-monitoring1
+postgres1
+postgres2
+redis-platform1
+redis-command-handler1
+redis-platform-consumer1
