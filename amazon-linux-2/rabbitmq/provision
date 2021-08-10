@@ -1,0 +1,132 @@
+#!/bin/bash
+
+set -e
+
+if [ -z "$1" ] ; then
+	echo "Supply instances count argument."
+	exit 1;
+fi
+
+if [ -z "$2" ] ; then
+	echo "Supply start ip argument."
+	exit 1;
+fi
+
+if [ -z "$3" ] ; then
+	echo "Supply type argument."
+	exit 1;
+fi
+
+if [ -z "$4" ] ; then
+	echo "Supply erlang cookie argument."
+	exit 1;
+fi
+
+INSTANCES_COUNT=$1
+START_IP=$2
+TYPE=$3
+ERLANG_COOKIE=$4
+
+function handle_hosts() {
+	echo "$START_IP" | awk -v count="$INSTANCES_COUNT" -F"." '{
+		for (i = 0; i < count; ++i) {
+			tmp = $1 "." $2 "." $3 "." $4 + i
+			tmp = tmp "    ip-" $1 "-" $2 "-" $3 "-" $4 + i
+			print tmp
+		}
+	}' > /tmp/generated_hosts.txt
+
+	printf "\n%s\n" "$(cat /tmp/generated_hosts.txt)"
+	echo "Lines above will be written to /etc/hosts"
+	sleep 10s
+	printf "\n%s\n" "$(cat /tmp/generated_hosts.txt)" >> /etc/hosts
+	rm -f /tmp/generated_hosts.txt
+}
+
+# installs erlang and rabbitmq
+function install_prerequisites() {
+	curl -s https://packagecloud.io/install/repositories/rabbitmq/erlang/script.rpm.sh | bash
+	yum install -y erlang
+
+	curl -s https://packagecloud.io/install/repositories/rabbitmq/rabbitmq-server/script.rpm.sh | bash
+	yum install -y rabbitmq-server
+}
+
+function start_prerequisites() {
+	chkconfig rabbitmq-server on
+	service rabbitmq-server start
+	rabbitmq-plugins enable rabbitmq_management
+}
+
+function configure_rabbitmq() {
+	echo -n "$ERLANG_COOKIE" > /var/lib/rabbitmq/.erlang.cookie
+
+	echo "ulimit -S -n 4096" > /etc/default/rabbitmq-server
+
+	echo "rabbitmq         soft    nofile          1000000" >  /etc/security/limits.conf
+	echo "rabbitmq         hard    nofile          1000000" >> /etc/security/limits.conf
+}
+
+function execute_after_reboot() {
+	TYPE=$1
+
+	if [ "$TYPE" != "master" ] ; then
+		TYPE=slave
+	fi
+
+	if [ "$TYPE" == "slave" ] ; then
+
+		MASTER_CLUSTER_NAME="rabbit@ip-$(echo -n "$START_IP" | sed 's/\./-/g')"
+
+		cat <<- EOF > /root/join_cluster.sh
+		#! /bin/bash
+
+		echo "Trying to join cluster" > /root/log.txt
+
+		while :
+		do
+			systemctl status rabbitmq-server.service >>/root/log.txt 2>>/root/err.txt
+			if [[ $? -eq 0 ]]; then
+				break
+			fi
+			echo "$(date) - Wait to start rabbitmq service" >> /root/log.txt
+			sleep 5s
+		done
+
+		set -e
+
+		rabbitmqctl stop_app
+		echo "Rabbit stopped" >> /root/log.txt
+
+		rabbitmqctl join_cluster "$MASTER_CLUSTER_NAME" >>/root/log.txt 2>>/root/err.txt
+		echo "Joined cluster to rabbit@$MASTER_CLUSTER_NAME" >> /root/log.txt
+
+		rabbitmqctl start_app 2>>/root/err.txt
+		echo "Rabbit started" >> /root/log.txt
+
+		# remove itself after 1st reboot
+		rm -f /root/join_cluster_cron
+		crontab -r
+		rm -f /root/join_cluster.sh
+
+		EOF
+
+		chmod +x /root/join_cluster.sh
+		echo "@reboot /root/join_cluster.sh" > /root/join_cluster_cron
+		crontab /root/join_cluster_cron
+	fi
+}
+
+install_prerequisites
+start_prerequisites
+
+handle_hosts
+
+configure_rabbitmq
+
+execute_after_reboot "$TYPE"
+
+echo "Prepare to reboot"
+sleep 5s
+
+reboot
