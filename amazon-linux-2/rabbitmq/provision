@@ -118,40 +118,34 @@ function execute_after_reboot() {
 		MASTER_CLUSTER_NAME="rabbit@ip-$(echo -n "$START_IP" | sed 's/\./-/g')"
 
 		cat <<- EOF > /root/join_cluster.sh
-		#! /bin/bash
-
-		echo "Trying to join cluster" > /root/log.txt
-
-		while :
-		do
-			systemctl status rabbitmq-server.service >>/root/log.txt 2>>/root/err.txt
-			if [[ $? -eq 0 ]]; then
-				break
-			fi
-			echo "$(date) - Wait to start rabbitmq service" >> /root/log.txt
-			sleep 5s
-		done
+		#!/bin/bash
 
 		set -e
 
-		rabbitmqctl stop_app
-		echo "Rabbit stopped" >> /root/log.txt
+		echo "Await rabbit to start" >/root/log.txt
+		/sbin/rabbitmqctl await_startup 2>>/root/err.txt
 
-		rabbitmqctl join_cluster "$MASTER_CLUSTER_NAME" >>/root/log.txt 2>>/root/err.txt
-		echo "Joined cluster to rabbit@$MASTER_CLUSTER_NAME" >> /root/log.txt
+		echo "Trying to join cluster" > /root/log.txt
 
-		rabbitmqctl start_app 2>>/root/err.txt
+
+		/sbin/rabbitmqctl stop_app 2>>/root/err.txt
+		echo "Rabbit stopped" >>/root/log.txt
+
+		/sbin/rabbitmqctl join_cluster $MASTER_CLUSTER_NAME >>/root/log.txt 2>>/root/err.txt
+		echo "Joined cluster to $MASTER_CLUSTER_NAME" >>/root/log.txt
+
+		/sbin/rabbitmqctl start_app 2>>/root/err.txt
 		echo "Rabbit started" >> /root/log.txt
 
 		# remove itself after 1st reboot
-		rm -f /root/join_cluster_cron
-		crontab -r
-		rm -f /root/join_cluster.sh
+		# rm -f /root/join_cluster_cron
+		# crontab -r
+		# rm -f /root/join_cluster.sh
 
 		EOF
 
 		chmod +x /root/join_cluster.sh
-		echo "@reboot /root/join_cluster.sh" > /root/join_cluster_cron
+		echo "@reboot sleep 100 && /root/join_cluster.sh" > /root/join_cluster_cron
 		crontab /root/join_cluster_cron
 	fi
 }
