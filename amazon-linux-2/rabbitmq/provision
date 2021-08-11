@@ -2,30 +2,58 @@
 
 set -e
 
-if [ -z "$1" ] ; then
+while [ ! -z "$1" ]; do
+  case "$1" in
+     --instances|-i)
+         shift
+         INSTANCES_COUNT=$1
+         ;;
+     --start_ip|-p)
+         shift
+         START_IP=$1
+         ;;
+     --type|-t)
+        shift
+        TYPE=$1
+         ;;
+		 --erlang_cookie|-e)
+        shift
+        ERLANG_COOKIE=$1
+         ;;
+		 --rabbit_version|-r)
+				shift
+				RABBIT_VERSION=$1
+				 ;;
+		--erlang_version|-l)
+				shift
+				ERLANG_VERSION=$1
+				 ;;
+     *)
+        show_usage # todo
+        ;;
+  esac
+shift
+done
+
+if [ -z "$INSTANCES_COUNT" ] ; then
 	echo "Supply instances count argument."
-	exit 1;
+	exit 1
 fi
 
-if [ -z "$2" ] ; then
+if [ -z "$START_IP" ] ; then
 	echo "Supply start ip argument."
-	exit 1;
+	exit 1
 fi
 
-if [ -z "$3" ] ; then
+if [ -z "$TYPE" ] ; then
 	echo "Supply type argument."
-	exit 1;
+	exit 1
 fi
 
-if [ -z "$4" ] ; then
+if [ -z "$ERLANG_COOKIE" ] ; then
 	echo "Supply erlang cookie argument."
-	exit 1;
+	exit 1
 fi
-
-INSTANCES_COUNT=$1
-START_IP=$2
-TYPE=$3
-ERLANG_COOKIE=$4
 
 function handle_hosts() {
 	echo "$START_IP" | awk -v count="$INSTANCES_COUNT" -F"." '{
@@ -46,10 +74,21 @@ function handle_hosts() {
 # installs erlang and rabbitmq
 function install_prerequisites() {
 	curl -s https://packagecloud.io/install/repositories/rabbitmq/erlang/script.rpm.sh | bash
-	yum install -y erlang
+
+	if [[ -n $ERLANG_VERSION ]] ; then
+		yum install -y "erlang-$ERLANG_VERSION" 2>>/root/err.txt
+	else
+		yum install -y erlang
+	fi
 
 	curl -s https://packagecloud.io/install/repositories/rabbitmq/rabbitmq-server/script.rpm.sh | bash
-	yum install -y rabbitmq-server
+
+	if [[ -n $RABBIT_VERSION ]] ; then
+		yum install -y "rabbitmq-server-$RABBIT_VERSION" 2>>/root/err.txt
+	else
+		yum install -y rabbitmq-server
+	fi
+
 }
 
 function start_prerequisites() {
