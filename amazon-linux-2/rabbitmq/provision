@@ -2,30 +2,71 @@
 
 set -e
 
-if [ -z "$1" ] ; then
+function show_usage() {
+	printf "\n"
+	printf "Options:\n"
+	printf " --instances|-i, Instances count which will run rabbitmq\n"
+	printf " --start_ip|-p, ip addresses start of range\n"
+	printf " --type|-t, Master or slave\n"
+	printf " --erlang_cookie|-e, Erlang cookie for clustering authentication\n"
+	printf " --rabbit_version|-r, RabbitMQ version\n"
+	printf " --erlang_version|-l, Erlang version\n"
+
+	return 1
+}
+
+while [ ! -z "$1" ]; do
+  case "$1" in
+     --instances|-i)
+         shift
+         INSTANCES_COUNT=$1
+         ;;
+     --start_ip|-p)
+         shift
+         START_IP=$1
+         ;;
+     --type|-t)
+        shift
+        TYPE=$1
+         ;;
+     --erlang_cookie|-e)
+        shift
+        ERLANG_COOKIE=$1
+        ;;
+     --rabbit_version|-r)
+        shift
+        RABBIT_VERSION=$1
+        ;;
+     --erlang_version|-l)
+        shift
+        ERLANG_VERSION=$1
+        ;;
+     *)
+        show_usage
+        ;;
+  esac
+shift
+done
+
+if [ -z "$INSTANCES_COUNT" ] ; then
 	echo "Supply instances count argument."
-	exit 1;
+	exit 1
 fi
 
-if [ -z "$2" ] ; then
+if [ -z "$START_IP" ] ; then
 	echo "Supply start ip argument."
-	exit 1;
+	exit 1
 fi
 
-if [ -z "$3" ] ; then
+if [ -z "$TYPE" ] ; then
 	echo "Supply type argument."
-	exit 1;
+	exit 1
 fi
 
-if [ -z "$4" ] ; then
+if [ -z "$ERLANG_COOKIE" ] ; then
 	echo "Supply erlang cookie argument."
-	exit 1;
+	exit 1
 fi
-
-INSTANCES_COUNT=$1
-START_IP=$2
-TYPE=$3
-ERLANG_COOKIE=$4
 
 function handle_hosts() {
 	echo "$START_IP" | awk -v count="$INSTANCES_COUNT" -F"." '{
@@ -46,10 +87,21 @@ function handle_hosts() {
 # installs erlang and rabbitmq
 function install_prerequisites() {
 	curl -s https://packagecloud.io/install/repositories/rabbitmq/erlang/script.rpm.sh | bash
-	yum install -y erlang
+
+	if [[ -n $ERLANG_VERSION ]] ; then
+		yum install -y "erlang-$ERLANG_VERSION" 2>>/root/err.txt
+	else
+		yum install -y erlang
+	fi
 
 	curl -s https://packagecloud.io/install/repositories/rabbitmq/rabbitmq-server/script.rpm.sh | bash
-	yum install -y rabbitmq-server
+
+	if [[ -n $RABBIT_VERSION ]] ; then
+		yum install -y "rabbitmq-server-$RABBIT_VERSION" 2>>/root/err.txt
+	else
+		yum install -y rabbitmq-server
+	fi
+
 }
 
 function start_prerequisites() {
@@ -79,29 +131,23 @@ function execute_after_reboot() {
 		MASTER_CLUSTER_NAME="rabbit@ip-$(echo -n "$START_IP" | sed 's/\./-/g')"
 
 		cat <<- EOF > /root/join_cluster.sh
-		#! /bin/bash
-
-		echo "Trying to join cluster" > /root/log.txt
-
-		while :
-		do
-			systemctl status rabbitmq-server.service >>/root/log.txt 2>>/root/err.txt
-			if [[ $? -eq 0 ]]; then
-				break
-			fi
-			echo "$(date) - Wait to start rabbitmq service" >> /root/log.txt
-			sleep 5s
-		done
+		#!/bin/bash
 
 		set -e
 
-		rabbitmqctl stop_app
-		echo "Rabbit stopped" >> /root/log.txt
+		echo "Await rabbit to start" >/root/log.txt
+		/sbin/rabbitmqctl await_startup 2>>/root/err.txt
 
-		rabbitmqctl join_cluster "$MASTER_CLUSTER_NAME" >>/root/log.txt 2>>/root/err.txt
-		echo "Joined cluster to rabbit@$MASTER_CLUSTER_NAME" >> /root/log.txt
+		echo "Trying to join cluster" > /root/log.txt
 
-		rabbitmqctl start_app 2>>/root/err.txt
+
+		/sbin/rabbitmqctl stop_app 2>>/root/err.txt
+		echo "Rabbit stopped" >>/root/log.txt
+
+		/sbin/rabbitmqctl join_cluster $MASTER_CLUSTER_NAME >>/root/log.txt 2>>/root/err.txt
+		echo "Joined cluster to $MASTER_CLUSTER_NAME" >>/root/log.txt
+
+		/sbin/rabbitmqctl start_app 2>>/root/err.txt
 		echo "Rabbit started" >> /root/log.txt
 
 		# remove itself after 1st reboot
