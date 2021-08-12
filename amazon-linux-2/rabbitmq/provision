@@ -2,6 +2,19 @@
 
 set -e
 
+function show_usage() {
+	printf "\n"
+	printf "Options:\n"
+	printf " --instances|-i, Instances count which will run rabbitmq\n"
+	printf " --start_ip|-p, ip addresses start of range\n"
+	printf " --type|-t, Master or slave\n"
+	printf " --erlang_cookie|-e, Erlang cookie for clustering authentication\n"
+	printf " --rabbit_version|-r, RabbitMQ version\n"
+	printf " --erlang_version|-l, Erlang version\n"
+
+	return 1
+}
+
 while [ ! -z "$1" ]; do
   case "$1" in
      --instances|-i)
@@ -29,7 +42,7 @@ while [ ! -z "$1" ]; do
         ERLANG_VERSION=$1
         ;;
      *)
-        show_usage # todo
+        show_usage
         ;;
   esac
 shift
