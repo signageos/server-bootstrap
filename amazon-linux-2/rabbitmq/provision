@@ -16,18 +16,18 @@ while [ ! -z "$1" ]; do
         shift
         TYPE=$1
          ;;
-		 --erlang_cookie|-e)
+     --erlang_cookie|-e)
         shift
         ERLANG_COOKIE=$1
-         ;;
-		 --rabbit_version|-r)
-				shift
-				RABBIT_VERSION=$1
-				 ;;
-		--erlang_version|-l)
-				shift
-				ERLANG_VERSION=$1
-				 ;;
+        ;;
+     --rabbit_version|-r)
+        shift
+        RABBIT_VERSION=$1
+        ;;
+     --erlang_version|-l)
+        shift
+        ERLANG_VERSION=$1
+        ;;
      *)
         show_usage # todo
         ;;
@@ -138,9 +138,9 @@ function execute_after_reboot() {
 		echo "Rabbit started" >> /root/log.txt
 
 		# remove itself after 1st reboot
-		# rm -f /root/join_cluster_cron
-		# crontab -r
-		# rm -f /root/join_cluster.sh
+		rm -f /root/join_cluster_cron
+		crontab -r
+		rm -f /root/join_cluster.sh
 
 		EOF
 
