@@ -174,4 +174,4 @@ execute_after_reboot "$TYPE"
 
 echo "Prepare to reboot"
 
-(sleep 10s && reboot) &
+nohup bash -c '(sleep 10s && reboot) &'
