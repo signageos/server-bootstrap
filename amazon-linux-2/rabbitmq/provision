@@ -140,7 +140,6 @@ function execute_after_reboot() {
 
 		echo "Trying to join cluster" > /root/log.txt
 
-
 		/sbin/rabbitmqctl stop_app 2>>/root/err.txt
 		echo "Rabbit stopped" >>/root/log.txt
 
@@ -173,6 +172,5 @@ configure_rabbitmq
 execute_after_reboot "$TYPE"
 
 echo "Prepare to reboot"
-sleep 5s
 
-reboot
+nohup bash -c '(sleep 10s && reboot) &'
