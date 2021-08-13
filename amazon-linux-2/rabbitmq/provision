@@ -173,6 +173,5 @@ configure_rabbitmq
 execute_after_reboot "$TYPE"
 
 echo "Prepare to reboot"
-sleep 5s
 
-reboot
+(sleep 10s && reboot) &
