@@ -108,6 +108,7 @@ function start_prerequisites() {
 	chkconfig rabbitmq-server on
 	service rabbitmq-server start
 	rabbitmq-plugins enable rabbitmq_management
+	rabbitmq-plugins enable rabbitmq_prometheus
 }
 
 function configure_rabbitmq() {
